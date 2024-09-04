@@ -36,3 +36,60 @@
     transform: rotate(360deg);
   }
 }
+
+/* App.css */
+.app-container {
+  max-width: 1000px;
+  margin: 50px auto; /* 調整上下、左右的邊距，使其置中 */
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.ant-table {
+  background-color: #fff;
+  border-radius: 8px;
+}
+
+.ant-table-thead > tr > th {
+  text-align: center; /* 表頭置中 */
+}
+
+.ant-table-tbody > tr > td {
+  text-align: center; /* 表格內容置中 */
+}
+
+.ant-table-tbody > tr > td .ant-rate {
+  display: inline-block;
+  width: 150px; /* 寬度調整適合5顆星 */
+}
+
+.center-text {
+  text-align: center; /* 用於讓第一列文字置中 */
+}
+
+form {
+  max-width: 400px;
+  margin: 0 auto; /* 表單置中 */
+}
+
+.ant-form-item {
+  margin-bottom: 16px;
+}
+
+.ant-input {
+  border-radius: 4px;
+  padding: 8px;
+}
+
+.ant-btn {
+  border-radius: 4px;
+}
+
+

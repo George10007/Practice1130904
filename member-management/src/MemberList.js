@@ -1,13 +1,28 @@
 import React from 'react';
-import { Table, Tag, Space, Button } from 'antd';
+import { Table, Tag, Space, Button, Rate, Switch } from 'antd';
+import { DeleteOutlined } from '@ant-design/icons';  // 引入垃圾桶圖示
 
-const MemberList = ({ members, deleteMember, toggleCheckIn, openAddMemberModal }) => {
+const MemberList = ({ members, deleteMember, toggleCheckIn, openAddMemberModal, updateMemberLevel }) => {
   const columns = [
+    {
+      title: '簽到狀態',
+      key: 'checkedIn',
+      dataIndex: 'checkedIn',
+      width: 120, // 調整簽到欄位的寬度
+      className: 'center-text', // 使用CSS置中
+      render: (checkedIn, record) => (
+        <Switch
+          checked={checkedIn}
+          onChange={() => toggleCheckIn(record.id)}
+          checkedChildren="已簽到"
+          unCheckedChildren="未簽到"
+        />
+      ),
+    },
     {
       title: '會員姓名',
       dataIndex: 'name',
       key: 'name',
-      render: (text) => <a>{text}</a>,
     },
     {
       title: '註冊時間',
@@ -23,18 +38,12 @@ const MemberList = ({ members, deleteMember, toggleCheckIn, openAddMemberModal }
       title: '會員等級',
       dataIndex: 'level',
       key: 'level',
-      render: (level) => (
-        <Tag color="gold">{`${level} 星`}</Tag>
-      ),
-    },
-    {
-      title: '簽到狀態',
-      key: 'checkedIn',
-      dataIndex: 'checkedIn',
-      render: (checkedIn) => (
-        <Tag color={checkedIn ? 'green' : 'volcano'}>
-          {checkedIn ? '已簽到' : '未簽到'}
-        </Tag>
+      width: 180, // 調整寬度，使符合5顆星的長度
+      render: (level, record) => (
+        <Rate
+          value={level}
+          onChange={(value) => updateMemberLevel(record.id, value)}
+        />
       ),
     },
     {
@@ -42,10 +51,7 @@ const MemberList = ({ members, deleteMember, toggleCheckIn, openAddMemberModal }
       key: 'action',
       render: (_, record) => (
         <Space size="middle">
-          <a onClick={() => toggleCheckIn(record.id)}>
-            {record.checkedIn ? '取消簽到' : '簽到'}
-          </a>
-          <a onClick={() => deleteMember(record.id)}>刪除</a>
+          <DeleteOutlined onClick={() => deleteMember(record.id)} style={{ color: 'red', cursor: 'pointer' }} />
         </Space>
       ),
     },
@@ -53,8 +59,12 @@ const MemberList = ({ members, deleteMember, toggleCheckIn, openAddMemberModal }
 
   return (
     <div>
-      <Table columns={columns} dataSource={members.map(member => ({ ...member, key: member.id }))} />
-      <div style={{ marginTop: 16 }}>
+      <Table
+        columns={columns}
+        dataSource={members.map(member => ({ ...member, key: member.id }))}
+        pagination={{ pageSize: 7 }} // 每頁顯示7行
+      />
+      <div style={{ marginTop: 16, textAlign: 'center' }}>
         <Button type="primary" onClick={openAddMemberModal}>
           新增會員
         </Button>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Modal, Button } from 'antd';
 import MemberList from './MemberList';
 import MemberForm from './MemberForm';
+import './App.css'; // 引入 CSS 文件
 
 const App = () => {
   const [open, setOpen] = useState(false);
@@ -20,6 +21,14 @@ const App = () => {
     setOpen(false); // 添加會員後自動關閉對話框
   };
 
+  const updateMemberLevel = (id, level) => {
+    setMembers(
+      members.map((member) =>
+        member.id === id ? { ...member, level } : member
+      )
+    );
+  };
+
   const deleteMember = (id) => {
     setMembers(members.filter((member) => member.id !== id));
   };
@@ -33,13 +42,14 @@ const App = () => {
   };
 
   return (
-    <div className="App">
+    <div className="app-container">
       <h1>會員資料管理系統</h1>
       <MemberList
         members={members}
         deleteMember={deleteMember}
         toggleCheckIn={toggleCheckIn}
         openAddMemberModal={showModal}
+        updateMemberLevel={updateMemberLevel}
       />
       <Modal
         title="新增會員"
