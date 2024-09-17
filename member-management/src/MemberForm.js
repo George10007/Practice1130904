@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Form, Input, Button } from 'antd';
 
 function MemberForm({ addMember }) {
   const [form] = Form.useForm();
 
   const onFinish = (values) => {
-    addMember({ name: values.name, email: values.email, level: 1 }); // 預設等級為 1
-    form.resetFields();
+    // 調用父組件傳入的 addMember 函數，並預設會員等級為 1
+    addMember({ name: values.name, email: values.email, level: 1 });
+    form.resetFields(); // 重置表單
   };
 
   return (
@@ -28,7 +29,10 @@ function MemberForm({ addMember }) {
       <Form.Item
         name="email"
         label="Email"
-        rules={[{ required: true, message: '請輸入會員 Email!' }, { type: 'email', message: '請輸入有效的 Email!' }]}
+        rules={[
+          { required: true, message: '請輸入會員 Email!' },
+          { type: 'email', message: '請輸入有效的 Email!' },
+        ]}
       >
         <Input placeholder="輸入會員 Email" />
       </Form.Item>

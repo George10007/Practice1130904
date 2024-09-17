@@ -1,105 +1,123 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios'; // 引入 axios 來調用 API
-import { Modal, Button } from 'antd';
+import { ethers } from 'ethers';
+import HonestClub1ABI from './abis/HonestClub1.json'; // 替換成正確的路徑
 import MemberList from './MemberList';
 import MemberForm from './MemberForm';
-import './App.css';
+
+const contractAddress = "YOUR_CONTRACT_ADDRESS"; // 替換為你的合約地址
 
 const App = () => {
-  const [open, setOpen] = useState(false);
+  const [account, setAccount] = useState(null);
+  const [honestClub1, setHonestClub1] = useState(null);
   const [members, setMembers] = useState([]);
 
-  // 1. useEffect 來初始化會員列表
-  useEffect(() => {
-    const fetchMembers = async () => {
+  // 連接 MetaMask
+  const connectWallet = async () => {
+    if (window.ethereum) {
       try {
-        const response = await axios.get('/api/members'); // 從後端 API 獲取會員數據
-        setMembers(response.data); // 設置會員列表
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        setAccount(accounts[0]);
+
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+        const contract = new ethers.Contract(contractAddress, HonestClub1ABI, signer);
+        setHonestClub1(contract);
+
+        loadMembers(contract); // 加載會員列表
       } catch (error) {
-        console.error('Error fetching members:', error);
+        console.error("MetaMask 連接失敗:", error);
       }
-    };
-
-    fetchMembers();
-  }, []);
-
-  // 2. 新增會員，通過 POST 發送到後端
-  const addMember = async (member) => {
-    try {
-      const response = await axios.post('/api/members', member); // 發送新增會員請求
-      setMembers([...members, response.data]); // 更新會員列表
-      setOpen(false); // 添加會員後自動關閉對話框
-    } catch (error) {
-      console.error('Error adding member:', error);
+    } else {
+      alert("請安裝 MetaMask");
     }
   };
 
-  // 3. 更新會員等級（可選，根據需求擴展後端 API）
-  const updateMemberLevel = async (id, level) => {
-    try {
-      await axios.put(`/api/members/${id}`, { level }); // 發送更新會員等級請求
-      setMembers(
-        members.map((member) =>
-          member.id === id ? { ...member, level } : member
-        )
-      );
-    } catch (error) {
-      console.error('Error updating member level:', error);
+  // 載入會員列表
+  const loadMembers = async (contract) => {
+    const memberCount = await contract.how_many_members();
+    const loadedMembers = [];
+    for (let i = 0; i < memberCount; i++) {
+      const member = await contract.members(i);
+      loadedMembers.push({
+        id: i,
+        name: member.name,
+        email: member.email,
+        level: member.level,
+        signIn: member.signIn,
+      });
+    }
+    setMembers(loadedMembers);
+  };
+
+  // 新增會員
+  const addMember = async (newMember) => {
+    if (honestClub1) {
+      try {
+        const tx = await honestClub1.add_member(newMember.name, newMember.email);
+        await tx.wait();
+        loadMembers(honestClub1); // 更新會員列表
+      } catch (error) {
+        console.error("新增會員失敗:", error);
+      }
     }
   };
 
-  // 4. 刪除會員，通過 DELETE 發送到後端
+  // 刪除會員
   const deleteMember = async (id) => {
-    try {
-      await axios.delete(`/api/members/${id}`); // 發送刪除會員請求
-      setMembers(members.filter((member) => member.id !== id)); // 更新會員列表
-    } catch (error) {
-      console.error('Error deleting member:', error);
+    if (honestClub1) {
+      try {
+        const tx = await honestClub1.remove_member(id);
+        await tx.wait();
+        loadMembers(honestClub1); // 更新會員列表
+      } catch (error) {
+        console.error("刪除會員失敗:", error);
+      }
     }
   };
 
-  // 5. 簽到功能，更新會員簽到狀態
+  // 調整會員等級
+  const updateMemberLevel = async (id, newLevel) => {
+    if (honestClub1) {
+      try {
+        const tx = await honestClub1.adjustLevel(id, newLevel);
+        await tx.wait();
+        loadMembers(honestClub1); // 更新會員列表
+      } catch (error) {
+        console.error("調整會員等級失敗:", error);
+      }
+    }
+  };
+
+  // 切換簽到狀態
   const toggleCheckIn = async (id) => {
-    const member = members.find((m) => m.id === id);
-    try {
-      await axios.put(`/api/members/${id}`, { checkedIn: !member.checkedIn }); // 發送更新簽到狀態請求
-      setMembers(
-        members.map((member) =>
-          member.id === id ? { ...member, checkedIn: !member.checkedIn } : member
-        )
-      );
-    } catch (error) {
-      console.error('Error toggling check-in status:', error);
+    if (honestClub1) {
+      try {
+        const tx = await honestClub1.toggleCheckIn(id);
+        await tx.wait();
+        loadMembers(honestClub1); // 更新會員列表
+      } catch (error) {
+        console.error("簽到失敗:", error);
+      }
     }
-  };
-
-  // 6. 打開和關閉模態框
-  const showModal = () => {
-    setOpen(true);
-  };
-
-  const handleCancel = () => {
-    setOpen(false);
   };
 
   return (
-    <div className="app-container">
-      <h1>會員資料管理系統</h1>
-      <MemberList
-        members={members}
-        deleteMember={deleteMember}
-        toggleCheckIn={toggleCheckIn}
-        openAddMemberModal={showModal}
-        updateMemberLevel={updateMemberLevel}
-      />
-      <Modal
-        title="新增會員"
-        open={open}
-        onCancel={handleCancel}
-        footer={null}
-      >
-        <MemberForm addMember={addMember} />
-      </Modal>
+    <div>
+      <h1>會員資料管理系統 DApp</h1>
+      {account ? (
+        <div>
+          <p>已連接錢包: {account}</p>
+          <MemberForm addMember={addMember} />
+          <MemberList
+            members={members}
+            deleteMember={deleteMember}
+            toggleCheckIn={toggleCheckIn}
+            updateMemberLevel={updateMemberLevel}
+          />
+        </div>
+      ) : (
+        <button onClick={connectWallet}>連接 MetaMask</button>
+      )}
     </div>
   );
 };
