@@ -1,6 +1,6 @@
 import React from 'react';
 import { Table, Tag, Space, Button, Rate, Switch } from 'antd';
-import { DeleteOutlined } from '@ant-design/icons';  // 引入垃圾桶圖示
+import { DeleteOutlined } from '@ant-design/icons';
 
 const MemberList = ({ members, deleteMember, toggleCheckIn, openAddMemberModal, updateMemberLevel }) => {
   const columns = [
@@ -51,7 +51,10 @@ const MemberList = ({ members, deleteMember, toggleCheckIn, openAddMemberModal, 
       key: 'action',
       render: (_, record) => (
         <Space size="middle">
-          <DeleteOutlined onClick={() => deleteMember(record.id)} style={{ color: 'red', cursor: 'pointer' }} />
+          <DeleteOutlined
+            onClick={() => deleteMember(record.id)}
+            style={{ color: 'red', cursor: 'pointer' }}
+          />
         </Space>
       ),
     },
